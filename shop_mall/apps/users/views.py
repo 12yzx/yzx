@@ -2,8 +2,10 @@ from django.shortcuts import render
 from django.views import View
 from .models import User
 from django.http import JsonResponse, HttpResponse
+from django.contrib.auth import login
 import re
 import json
+
 
 class UsernameCountView(View):
 
@@ -49,7 +51,10 @@ class RegisterView(View):
         #     pass
 
         # 4.数据保存
-        User.objects.create_user(username=username, password=password, mobile=mobile)
+        user = User.objects.create_user(username=username, password=password, mobile=mobile)
+
+        # 状态保持
+        login(request, user)
 
         return JsonResponse({'code': 0, 'errmsg': '首页返回'})
 
