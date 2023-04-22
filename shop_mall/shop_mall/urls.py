@@ -17,6 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# 注册转换器 对用户名进行正则判断
+from utils.converters import UsernameConverter
+from django.urls import register_converter
+
+register_converter(UsernameConverter, 'username')
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('apps.users.urls')),
