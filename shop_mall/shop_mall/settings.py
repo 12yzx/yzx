@@ -37,10 +37,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'apps.users',
+
+    # 进行跨域同源操作
+    'corsheaders',
+
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -192,4 +198,11 @@ LOGGING = {
 }
 # 替换自定义的用户模型类
 AUTH_USER_MODEL = 'users.User'
+
+# 进行cors配置
+CORS_ORIGIN_WHITELIST = (
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+)
+CORS_ALLOW_CREDENTIALS = True  # 允许跨域携带cookie
 
