@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'apps.users',
+    'apps.verifications',
 
     # 进行跨域同源操作
     'corsheaders',
