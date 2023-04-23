@@ -4,6 +4,7 @@ from captcha.image import ImageCaptcha
 from django_redis import get_redis_connection
 from django.http import JsonResponse
 from random import randint
+from celery_tasks.sms.tasks import celery_send_msg
 
 from libs.ronglianyun.example.SendMessage import send_message
 
@@ -36,6 +37,9 @@ class ImageCodeView(View):
 class SmsCodeView(View):
 
     def get(self, request, mobile):
+        """
+        实现短信验证码
+        """
         # 1.获取请求参数
         image_code = request.GET.get('image_code')
         uuid = request.GET.get('image_code_id')
@@ -63,8 +67,8 @@ class SmsCodeView(View):
         pipe.setex('send_flag_%s' % mobile, 60, 1)
         pipe.execute()
 
-        # 5.发送
-        send_message(1 ,mobile, (sms_code, "5"))
+        # 5.使用celery异步发送短信
+        celery_send_msg.delay(mobile, sms_code)
 
         return JsonResponse({'code': '0', 'errmsg': '发送成功'})
 
