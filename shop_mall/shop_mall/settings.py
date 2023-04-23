@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +44,9 @@ INSTALLED_APPS = [
 
     # 进行跨域同源操作
     'corsheaders',
+    'captcha',
+
+
 
 ]
 
@@ -151,6 +155,13 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+    "code": {       # 用于保存session数据
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -206,4 +217,3 @@ CORS_ORIGIN_WHITELIST = (
     'http://localhost:8000',
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许跨域携带cookie
-

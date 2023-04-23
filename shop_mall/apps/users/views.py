@@ -40,6 +40,9 @@ class RegisterView(View):
         allow = body_dict.get('allow')
 
         # 3. 验证数据
+        # 判断是否已存在
+        if User.objects.filter(username=username):
+            return JsonResponse({'code': '400', 'errmsg': '用户已注册'})
 
         if not all([username, password, password2, mobile, allow]):
             return JsonResponse({'code': 400, 'errmsg': '数据不全'})
@@ -47,8 +50,20 @@ class RegisterView(View):
         if not re.match('[a-zA-Z0-9_-]{5,20}', username):
             return JsonResponse({'code': 400, 'errmsg': '用户名不满足规则'})
 
-        # if not re.match('[]'):
-        #     pass
+        # 密码包含数字、字母和特殊字符，长度为8-20个字符
+        pattern = r'^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[@$!%*#?&])[a-zA-Z0-9@$!%*#?&]{8,20}$'
+        if not re.match(pattern, password):
+            return JsonResponse({'code': 400, 'errmsg': '密码不符合要求'})
+
+        if password != password2:
+            return JsonResponse({'code': 400, 'errmsg': '两次密码不一致'})
+
+        # 判断手机号是否存在以及是否符合要求
+        if User.objects.filter(mobile=mobile):
+            return JsonResponse({'code': '400', 'errmsg': '手机号已存在'})
+        pattern = r'^1[0-9]{10}$'
+        if not re.match(pattern, mobile):
+            return JsonResponse({'code': 400, 'errmsg': '手机号码不符合要求，应为1开头的十一位'})
 
         # 4.数据保存
         user = User.objects.create_user(username=username, password=password, mobile=mobile)
