@@ -1,8 +1,9 @@
-from django.shortcuts import render
 from django.views import View
-from .models import User
 from django.http import JsonResponse, HttpResponse
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate, logout
+from utils.views import LoginRequiredJsonMixin
+from .models import User
+
 import re
 import json
 
@@ -42,7 +43,7 @@ class RegisterView(View):
         # 3. 验证数据
         # 判断是否已存在
         if User.objects.filter(username=username):
-            return JsonResponse({'code': '400', 'errmsg': '用户已注册'})
+            return JsonResponse({'code': 400, 'errmsg': '用户已注册'})
 
         if not all([username, password, password2, mobile, allow]):
             return JsonResponse({'code': 400, 'errmsg': '数据不全'})
@@ -60,7 +61,7 @@ class RegisterView(View):
 
         # 判断手机号是否存在以及是否符合要求
         if User.objects.filter(mobile=mobile):
-            return JsonResponse({'code': '400', 'errmsg': '手机号已存在'})
+            return JsonResponse({'code': 400, 'errmsg': '手机号已存在'})
         pattern = r'^1[0-9]{10}$'
         if not re.match(pattern, mobile):
             return JsonResponse({'code': 400, 'errmsg': '手机号码不符合要求，应为1开头的十一位'})
@@ -72,6 +73,73 @@ class RegisterView(View):
         login(request, user)
 
         return JsonResponse({'code': 0, 'errmsg': '首页返回'})
+
+
+class LoginView(View):
+    """
+    登录实现
+    """
+    def post(self, request):
+        # 1.接受数据
+        data = json.loads(request.body.decode())
+        username = data.get('username')
+        password = data.get('password')
+        # 是否保持登录状态
+        remember = data.get('remember')
+        # 2.验证数据
+        if not all([username, password]):
+            return JsonResponse({'code': 400, 'errmsg': '参数不全'})
+        # 用户名或手机号登录的实现
+        # if re.match('1[3-9]\d{9}', username):
+        #     User.USERNAME_FIELD = 'mobile'
+        # else:
+        #     User.USERNAME_FIELD = 'username'
+
+        user = authenticate(username=username, password=password)
+        if user is None:
+            return JsonResponse({'code': 400, 'errmsg': '用户名或密码错误'})
+
+        login(request, user)
+        # 3.判断是否保持登录
+        if remember:
+            request.session.set_expiry(60*30)   # 默认是2周
+        else:
+            request.session.set_expiry(0)
+
+        # 在前端显示用户信息
+        response = JsonResponse({'code': 0, 'errmsg': '登录成功'})
+        response.set_cookie('username', username)
+        return response
+
+
+class LogoutView(View):
+    """
+    退出
+    """
+    def delete(self, request):
+        # 删除session信息
+        logout(request)
+        # 删除cookie信息
+        response = JsonResponse({'code': 0, 'errmsg': '退出'})
+        response.delete_cookie('username')
+        return response
+
+
+class CenterView(LoginRequiredJsonMixin, View):
+    """未登录返回JSON"""
+    def get(self, request):
+        return JsonResponse({'code': 0, 'errmsg': 'ok'})
+
+
+
+
+
+
+
+
+
+
+
 
 
 

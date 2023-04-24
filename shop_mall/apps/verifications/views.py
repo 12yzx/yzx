@@ -70,7 +70,7 @@ class SmsCodeView(View):
         # 5.使用celery异步发送短信
         celery_send_msg.delay(mobile, sms_code)
 
-        return JsonResponse({'code': '0', 'errmsg': '发送成功'})
+        return JsonResponse({'code': 0, 'errmsg': '发送成功'})
 
 
 
