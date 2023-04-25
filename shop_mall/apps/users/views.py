@@ -1,8 +1,14 @@
 from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate, logout
+
+from utils.email_token import send_email_token, check_email_token
 from utils.views import LoginRequiredJsonMixin
+from django.core.mail import send_mail
+from celery_tasks.sned_email.tasks import celery_send_email
 from .models import User
+from itsdangerous import URLSafeTimedSerializer
+from shop_mall import settings
 
 import re
 import json
@@ -126,11 +132,77 @@ class LogoutView(View):
 
 
 class CenterView(LoginRequiredJsonMixin, View):
-    """未登录返回JSON"""
+    """未登录返回JSON
+        用户中心
+    """
     def get(self, request):
-        return JsonResponse({'code': 0, 'errmsg': 'ok'})
+
+        info_data = {
+            'username': request.user.username,
+            'email': request.user.email,
+            'mobile': request.user.mobile,
+            'email_active': request.user.email_active,
+        }
+        return JsonResponse({'code': 0, 'errmsg': 'ok', 'info_data': info_data})
 
 
+class EmailView(LoginRequiredJsonMixin, View):
+    """
+    邮件保存 激活
+    """
+    def put(self, request):
+        # 1.接收邮箱
+        data = json.loads(request.body.decode())
+        email = data.get('email')
+        # 2.验证邮箱
+        pattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$'
+        if not re.match(pattern, email):
+            return JsonResponse({'code': 400, 'errmsg': '请输入正确的邮箱'})
+        # 3.保存邮箱
+        user = request.user
+        user.email = email
+        user.save()
+        # 4.发送邮箱激活
+        # 对用户id加密
+        token = send_email_token(user.id)
+        subject = '激活'
+        from_email = '15832011554@163.com'
+        email_url = "http://127.0.0.1:8000/success/?token=%s" % token
+        message = '<a href="%s ">点击激活 %s</a>' % (email_url, email_url)
+        recipient_list = ['15832011554@163.com']
+        html_message = message
+        # celery_send_email.delay(recipient_list=recipient_list, html_message=html_message)
+        # celery建议在linux中运行
+        send_mail(
+            subject=subject,
+            message='hello',
+            from_email=from_email,
+            recipient_list=recipient_list,
+            html_message=html_message
+        )
+        # 5. 返回响应
+        return JsonResponse({'code': 0, 'errmsg': '发送成功'})
+
+
+class SuccessEmail(View):
+    """测试激活"""
+    def put(self, request):
+        # 1.获取数据
+        params = request.GET
+        token = params.get('token')
+        # 2.验证数据
+        if token is None:
+            return JsonResponse({'code': 400, 'errmsg': '数据不全'})
+        # 对user_id解密
+        user_id = check_email_token(token)
+        if user_id is None:
+            return JsonResponse({'code': 400, 'errmsg': '数据不全'})
+        # 查询并修改数据
+        user = User.objects.get(id=user_id)
+        user.email_active = True
+        user.save()
+        # 返回响应
+        return JsonResponse({'code': 0, 'errmsg': '激活成功'})
 
 
 

@@ -217,3 +217,12 @@ CORS_ORIGIN_WHITELIST = (
     'http://localhost:8000',
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许跨域携带cookie
+
+# 邮箱发送配置
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = '15832011554@163.com'
+EMAIL_HOST_PASSWORD = 'FONKKYXYHFOGUWDT'
+EMAIL_USE_TLS = False
+EMAIL_FROM = '111<15832011554@163.com>'
