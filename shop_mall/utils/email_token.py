@@ -14,8 +14,8 @@ def check_email_token(token):
     # 解密
     s = URLSafeTimedSerializer(secret_key=settings.SECRET_KEY)
     try:
-        user_id = s.loads(token)
-    except  Exception as e:
+        user_id = s.loads(token, max_age=60*60)
+    except Exception as e:
         return None
 
     return user_id
