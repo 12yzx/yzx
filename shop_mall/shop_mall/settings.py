@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     'apps.users',
     'apps.verifications',
+    'apps.areas',
 
     # 进行跨域同源操作
     'corsheaders',
