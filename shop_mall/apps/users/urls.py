@@ -12,5 +12,6 @@ urlpatterns = [
     path('address_show/', AddressShowView.as_view()),
     path('address_update/<id>', AddressUpdateView.as_view()),
     path('address_delete/<id>', AddressDeleteView.as_view()),
-
+    path('forget_password/', ForgetPasswordView.as_view()),
+    path('new_password/', NewPasswordView.as_view()),
 ]

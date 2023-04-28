@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate, logout
@@ -27,11 +28,6 @@ class UsernameCountView(View):
 
 
 class RegisterView(View):
-
-    def get(self, request):
-
-        # 获取请求后返回注册页面
-        return HttpResponse('200 ok')
 
     def post(self, request):
         # 接收请求
@@ -205,6 +201,73 @@ class SuccessEmail(View):
         return JsonResponse({'code': 0, 'errmsg': '激活成功'})
 
 
+class ForgetPasswordView(View):
+    """忘记密码"""
+
+    def get(self, request):
+        # 接收请求
+        return HttpResponse('返回找回密码界面')
+
+    def post(self, request):
+        # 1接收数据
+        data = json.loads(request.body.decode())
+        email = data.get('email')
+        # 2.验证数据
+        pattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$'
+        if not re.match(pattern, email):
+            return JsonResponse({'code': 400, 'errmsg': '请输入正确的邮箱'})
+        user = User.objects.get(email=email)
+        if not user:
+            return JsonResponse({'code': 400, 'errmsg': '邮箱未注册'})
+        user_id = user.id
+        token = send_email_token(user_id)
+        subject = '找回密码'
+        from_email = '15832011554@163.com'
+        email_url = "http://127.0.0.1:8000/new_password/?token=%s" % token
+        message = '<a href="%s ">点击下面链接找回密码 %s</a>' % (email_url, email_url)
+        recipient_list = ['15832011554@163.com']
+        html_message = message
+        send_mail(
+            subject=subject,
+            message='hello',
+            from_email=from_email,
+            recipient_list=recipient_list,
+            html_message=html_message
+        )
+        return JsonResponse({'code': 0, 'errmsg': 'OK'})
+
+
+class NewPasswordView(View):
+    """修改密码"""
+    def put(self, request):
+        # 1.获取数据
+        params = request.GET
+        token = params.get('token')
+        data = json.loads(request.body.decode())
+        new_password = data.get('new_password')
+        # 2.验证数据
+        if token is None:
+            return JsonResponse({'code': 400, 'errmsg': '数据不全'})
+        # 对user_id解密
+        user_id = check_email_token(token)
+        if user_id is None:
+            return JsonResponse({'code': 400, 'errmsg': '数据不全'})
+        pattern = r'^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[@$!%*#?&])[a-zA-Z0-9@$!%*#?&]{8,20}$'
+        # 密码包含数字、字母和特殊字符，长度为8-20个字符
+        if not re.match(pattern, new_password):
+            return JsonResponse({'code': 400, 'errmsg': '密码不符合要求'})
+        if User.objects.get(id=user_id).password == new_password:
+            return JsonResponse({'code': 400, 'errmsg': '新密码不能与旧密码相同'})
+        # 查询并修改数据
+        user = User.objects.get(id=user_id)
+        user.password = make_password(new_password)
+        user.save()
+        # 返回响应
+        return JsonResponse({'code': 0, 'errmsg': '密码修改成功'})
+
+
+
+
 class AddressCreateView(LoginRequiredJsonMixin, View):
     """新增地址信息"""
     def post(self, request):
@@ -320,8 +383,6 @@ class AddressDeleteView(LoginRequiredJsonMixin, View):
         # address_delete.delete()
         # 2.返回响应
         return JsonResponse({'code': 0, "errmsg": '删除成功'})
-
-
 
 
 
