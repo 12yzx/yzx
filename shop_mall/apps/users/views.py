@@ -1,12 +1,12 @@
 from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate, logout
-
+from django.views.decorators.http import require_http_methods
 from utils.email_token import send_email_token, check_email_token
 from utils.views import LoginRequiredJsonMixin
 from django.core.mail import send_mail
 from celery_tasks.sned_email.tasks import celery_send_email
-from .models import User
+from .models import User, Address
 from itsdangerous import URLSafeTimedSerializer
 from shop_mall import settings
 
@@ -33,7 +33,7 @@ class RegisterView(View):
         # 获取请求后返回注册页面
         return HttpResponse('200 ok')
 
-    def post(self,request):
+    def post(self, request):
         # 接收请求
         body_bytes = request.body
         body_str = body_bytes.decode()
@@ -203,6 +203,123 @@ class SuccessEmail(View):
         user.save()
         # 返回响应
         return JsonResponse({'code': 0, 'errmsg': '激活成功'})
+
+
+class AddressCreateView(LoginRequiredJsonMixin, View):
+    """新增地址信息"""
+    def post(self, request):
+        # 1.获取数据
+        date = json.loads(request.body.decode())
+        # 2.校验数据
+        receiver = date.get('receiver')
+        province_id = date.get('province_id')
+        city_id = date.get('city_id')
+        district_id = date.get('district_id')
+        place = date.get('place')
+        mobile = date.get('mobile')
+        email = date.get('email')
+        user = request.user
+        if not all([receiver, province_id, city_id, district_id, place, mobile, email]):
+            return JsonResponse({'code': 400, 'err,sg': '数据不全'})
+        pattern = r'^1[0-9]{10}$'
+        if not re.match(pattern, mobile):
+            return JsonResponse({'code': 400, 'errmsg': '手机号码不符合要求，应为1开头的十一位'})
+        pattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$'
+        if not re.match(pattern, email):
+            return JsonResponse({'code': 400, 'errmsg': '请输入正确的邮箱'})
+        # 3.保存数据
+        address = Address.objects.create(
+            user=user,
+            receiver=receiver,
+            province_id=province_id,
+            title=receiver,
+            city_id=city_id,
+            district_id=district_id,
+            place=place,
+            mobile=mobile,
+            email=email
+        )
+        address_dict = {
+            'id': address.id,
+            'title': address.title,
+            'province': address.province.name,
+            'city': address.city.name,
+            'district': address.district.name,
+            'place': address.place,
+            'mobile': address.mobile,
+            'email': address.email
+        }
+        # 4.返回数据
+        return JsonResponse({'code': 0, 'errmsg': 'ok', 'address_dict': address_dict})
+
+
+class AddressShowView(LoginRequiredJsonMixin, View):
+    """页面显示地址信息"""
+    def get(self, request):
+        # 获取数据
+        user = request.user
+        addresses = Address.objects.filter(user=user)
+        addresses_list = []
+        for item in addresses:
+            addresses_list.append({
+                'id': item.id,
+                'title': item.title,
+                'receiver': item.receiver,
+                'province': item.province.name,
+                'city': item.city.name,
+                'district': item.district.name,
+                'place': item.place,
+                'mobile': item.mobile,
+                'email': item.email
+            })
+        return JsonResponse({'code': 0, 'errmsg': 'ok', 'addresses_list': addresses_list})
+
+
+class AddressUpdateView(LoginRequiredJsonMixin, View):
+    """修改信息"""
+    def put(self, request, id):
+        # 1.获取数据
+        date = json.loads(request.body.decode())
+        # 2.校验数据
+        receiver = date.get('receiver')
+        province_id = date.get('province_id')
+        city_id = date.get('city_id')
+        district_id = date.get('district_id')
+        place = date.get('place')
+        mobile = date.get('mobile')
+        email = date.get('email')
+        pattern = r'^1[0-9]{10}$'
+        if not re.match(pattern, mobile):
+            return JsonResponse({'code': 400, 'errmsg': '手机号码不符合要求，应为1开头的十一位'})
+        pattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$'
+        if not re.match(pattern, email):
+            return JsonResponse({'code': 400, 'errmsg': '请输入正确的邮箱'})
+        address_update = Address.objects.filter(id=id).update(
+            receiver=receiver,
+            province=province_id,
+            city_id=city_id,
+            district_id=district_id,
+            place=place,
+            mobile=mobile,
+            email=email
+        )
+        return JsonResponse({'code': 0, 'errmsg': 'ok', 'address_update': address_update})
+
+
+class AddressDeleteView(LoginRequiredJsonMixin, View):
+    """删除地址信息"""
+
+    def delete(self, request, id):
+        # 1.获取删除对象
+        address_delete = Address.objects.filter(id=id)
+        # 逻辑删除
+        address_delete.update(
+            is_delete=True
+        )
+        # 物理删除
+        # address_delete.delete()
+        # 2.返回响应
+        return JsonResponse({'code': 0, "errmsg": '删除成功'})
 
 
 

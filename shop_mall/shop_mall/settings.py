@@ -42,10 +42,13 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.verifications',
     'apps.areas',
+    'apps.shops',
 
     # 进行跨域同源操作
     'corsheaders',
+
     'captcha',
+    # 'haystack',
 
 
 
@@ -227,3 +230,13 @@ EMAIL_HOST_USER = '15832011554@163.com'
 EMAIL_HOST_PASSWORD = 'FONKKYXYHFOGUWDT'
 EMAIL_USE_TLS = False
 EMAIL_FROM = '111<15832011554@163.com>'
+
+
+# 全局搜索的配置
+# HAYSTACK_CONNECTIONS = {
+#     'default': {
+#         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+#         'URL': 'http://127.0.0.1:8002/',  # 此处为elasticsearch运行的服务器ip地址，端口号默认为9200
+#         'INDEX_NAME': 'dj_pre_class',  # 指定elasticsearch建立的索引库的名称
+#     },
+# }
