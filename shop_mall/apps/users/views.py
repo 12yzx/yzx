@@ -2,7 +2,7 @@ from django.contrib.auth.hashers import make_password
 from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate, logout
-from django.views.decorators.http import require_http_methods
+from django.shortcuts import render
 from utils.email_token import send_email_token, check_email_token
 from utils.views import LoginRequiredJsonMixin
 from django.core.mail import send_mail
@@ -10,7 +10,6 @@ from celery_tasks.sned_email.tasks import celery_send_email
 from .models import User, Address
 from itsdangerous import URLSafeTimedSerializer
 from shop_mall import settings
-
 import re
 import json
 
