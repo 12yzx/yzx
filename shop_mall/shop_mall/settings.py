@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.areas',
     'apps.shops',
     'apps.shopcart',
+    'apps.comments',
 
     # 进行跨域同源操作
     'corsheaders',

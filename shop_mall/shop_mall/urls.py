@@ -32,5 +32,6 @@ urlpatterns = [
     path('', include('apps.areas.urls')),
     path('', include('apps.shops.urls')),
     path('', include('apps.shopcart.urls')),
+    path('', include('apps.comments.urls')),
 
 ]

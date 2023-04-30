@@ -18,7 +18,11 @@ class ShopCartView(LoginRequiredJsonMixin, View):
         if ShoppingCart.objects.filter(user=user, product=product).exists():
             # 更新数量
             cart = ShoppingCart.objects.get(user=user, product=product)
-            cart.num += 1
+            if cart.num < product.num:
+                cart.num += 1
+            else:
+                raise Exception('超出商品最大数量')
+
             cart.save()
         else:
             # 添加新的购物车商品
