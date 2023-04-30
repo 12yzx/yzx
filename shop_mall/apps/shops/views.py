@@ -1,6 +1,7 @@
 from django.views import View
 from .models import *
 from django.http import JsonResponse
+from django.db.models import Q
 import json
 
 
@@ -57,6 +58,24 @@ class ShopInfoView(View):
         return JsonResponse({'code': 0, 'product_info': product_info_json})
 
 
+class SearchView(View):
+    """实现全局搜索"""
+    def get(self, request):
+        query = request.GET.get('q', '')  # 获取搜索关键字
+        if not query:
+            return JsonResponse({'results': []})
 
+        products = Product.objects.filter(Q(name__icontains=query) | Q(details__icontains=query))  # 搜索相关记录
+
+        results = []
+        for product in products:
+            results.append({
+                'id': product.id,
+                'name': product.name,
+                'details': product.details,
+                'price': product.price,
+            })
+
+        return JsonResponse({'results': results})
 
 
