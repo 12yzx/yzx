@@ -14,7 +14,7 @@ class Product(models.Model):
     origin = models.CharField(max_length=20, verbose_name='产地')
     pro_type = models.CharField(max_length=3, choices=(('ncp', '农产品'),
                                                        ('sg', '水果'),
-                                                       ('ls', '零食'),
+                                                       ('ls', '零食')
                                                        ),
                                 verbose_name='分类', default='ls')
     buyers = models.IntegerField(default=0, verbose_name='购买人数')
@@ -34,7 +34,7 @@ class Product(models.Model):
 
 
 class ProPic(models.Model):
-    product = models.ForeignKey(Product, verbose_name='商品', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='img', verbose_name='商品', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product/%Y/%m', verbose_name='商品图')
     add_time = models.DateTimeField(default=datetime.now, verbose_name='添加时间')
 
