@@ -2,7 +2,6 @@ from django.contrib.auth.hashers import make_password
 from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, authenticate, logout
-from django.shortcuts import render
 from utils.email_token import send_email_token, check_email_token
 from utils.views import LoginRequiredJsonMixin
 from django.core.mail import send_mail
@@ -263,8 +262,6 @@ class NewPasswordView(View):
         user.save()
         # 返回响应
         return JsonResponse({'code': 0, 'errmsg': '密码修改成功'})
-
-
 
 
 class AddressCreateView(LoginRequiredJsonMixin, View):
