@@ -1,5 +1,5 @@
 import alipay
-
+# 测试支付
 def get_payment_url(total_price):
     client = alipay.AliPay(
         appid='your_appid',
